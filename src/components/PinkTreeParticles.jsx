@@ -6,12 +6,15 @@ import * as THREE from 'three'
 const vertexShader = `
   uniform float uTime;
   uniform float uScaleFactor; // Add scaling uniform
+  uniform float uHighlight; // Add highlight intensity
   attribute float aScale;
   attribute vec3 aColor;
   varying vec3 vColor;
   
   void main() {
-    vColor = aColor;
+    // Boost color brightness based on uHighlight
+    // uHighlight will be 1.0 normally, and higher (e.g., 2.0-3.0) when active
+    vColor = aColor * uHighlight;
     vec3 pos = position; // This is the base position
     
     // Scale the entire structure based on gesture
@@ -54,7 +57,7 @@ const fragmentShader = `
   }
 `
 
-export default function PinkTreeParticles({ count = 3000, gestureScale = 1 }) {
+export default function PinkTreeParticles({ count = 3000, gestureScale = 1, gesturePan = 0, isHighlighted = false }) {
     const mesh = useRef()
 
     const { positions, colors, scales } = useMemo(() => {
@@ -130,18 +133,44 @@ export default function PinkTreeParticles({ count = 3000, gestureScale = 1 }) {
 
     const uniforms = useMemo(() => ({
         uTime: { value: 0 },
-        uScaleFactor: { value: 1.0 }
+        uScaleFactor: { value: 1.0 },
+        uHighlight: { value: 1.0 }
     }), [])
+
+    // Use a ref to store smoothed pan value for fluid rotation
+    const smoothedPan = useRef(0)
 
     useFrame((state, delta) => {
         // Update uScaleFactor smoothly based on prop
-        // Lerp current value towards target gestureScale
         const currentScale = mesh.current.material.uniforms.uScaleFactor.value
         mesh.current.material.uniforms.uScaleFactor.value = THREE.MathUtils.lerp(currentScale, gestureScale, 0.1)
 
+        // Handle Highlight Transition
+        const targetHighlight = isHighlighted ? 3.0 : 1.0
+        const currentHighlight = mesh.current.material.uniforms.uHighlight.value
+        // Fast attack, slow release? Or just smooth lerp
+        // If highlighted (spike), move fast. If release, move a bit slower.
+        const lerpFactor = isHighlighted ? 0.1 : 0.02
+        mesh.current.material.uniforms.uHighlight.value = THREE.MathUtils.lerp(currentHighlight, targetHighlight, lerpFactor)
+
         mesh.current.material.uniforms.uTime.value = state.clock.getElapsedTime()
-        // Slow rotation of the whole tree
-        mesh.current.rotation.y = state.clock.getElapsedTime() * 0.05
+
+        // 1. Smooth out the input gesturePan
+        // Interpolate current smoothed value towards the raw input `gesturePan`
+        // Factor 0.05 makes it heavier/smoother, 0.1 is more responsive
+        smoothedPan.current = THREE.MathUtils.lerp(smoothedPan.current, gesturePan, 0.05)
+
+        // Base auto-rotation speed
+        const autoRotation = state.clock.getElapsedTime() * 0.05
+
+        // Apply smoothed gesture pan to rotation
+        // Lower sensitivity slightly (* 1.5 instead of 2)
+        const gestureRotation = -smoothedPan.current * 1.5
+
+        mesh.current.rotation.y = autoRotation + gestureRotation
+
+        // Ensure Z rotation is reset
+        mesh.current.rotation.z = 0
     })
 
     return (

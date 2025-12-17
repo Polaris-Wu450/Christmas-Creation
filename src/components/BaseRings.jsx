@@ -7,39 +7,47 @@ export default function BaseRings() {
 
     useFrame((state) => {
         const t = state.clock.getElapsedTime()
-        group.current.rotation.y = -t * 0.1 // Counter-rotate slowly
+        group.current.rotation.y = t * 0.05
 
-        // Wobble effect
-        group.current.rotation.z = Math.sin(t * 0.5) * 0.02
+        // Gentle floating
+        group.current.position.y = -2.5 + Math.sin(t * 0.3) * 0.1
     })
 
-    // Three rings with different radii
-    const rings = [3, 4, 5]
+    const rings = [3.2, 3.5, 3.8]
 
     return (
-        <group ref={group} position={[0, -3.2, 0]}>
+        <group ref={group} position={[0, -2.5, 0]}>
             {rings.map((radius, i) => (
-                <RingParticles key={i} radius={radius} count={100 + i * 50} speed={i % 2 === 0 ? 1 : -1} />
+                <ParticleRing
+                    key={i}
+                    radius={radius}
+                    count={150 + i * 50}
+                    opacity={0.6 - i * 0.1}
+                    speed={i % 2 === 0 ? 1 : -0.5}
+                />
             ))}
         </group>
     )
 }
 
-function RingParticles({ radius, count, speed }) {
+function ParticleRing({ radius, count, opacity, speed }) {
     const points = useMemo(() => {
         const p = new Float32Array(count * 3)
         for (let i = 0; i < count; i++) {
             const angle = (i / count) * Math.PI * 2
-            p[i * 3] = Math.cos(angle) * radius
-            p[i * 3 + 1] = (Math.random() - 0.5) * 0.2 // Slight vertical scatter
-            p[i * 3 + 2] = Math.sin(angle) * radius
+            const r = radius + (Math.random() - 0.5) * 0.3
+
+            p[i * 3] = Math.cos(angle) * r
+            p[i * 3 + 1] = (Math.random() - 0.5) * 0.15
+            p[i * 3 + 2] = Math.sin(angle) * r
         }
         return p
     }, [radius, count])
 
     const ref = useRef()
-    useFrame((state) => {
-        ref.current.rotation.y += 0.005 * speed
+
+    useFrame(() => {
+        ref.current.rotation.y += 0.002 * speed
     })
 
     return (
@@ -49,11 +57,12 @@ function RingParticles({ radius, count, speed }) {
             </bufferGeometry>
             <pointsMaterial
                 size={0.08}
-                color="#ffe66d"
+                color="#FCEEAC"
                 transparent
-                opacity={0.6}
+                opacity={opacity}
                 blending={THREE.AdditiveBlending}
                 depthWrite={false}
+                sizeAttenuation={true}
             />
         </points>
     )
