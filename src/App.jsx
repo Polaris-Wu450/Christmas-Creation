@@ -5,11 +5,7 @@ import Scene from './components/Scene'
 function App() {
     return (
         <div style={{ width: '100vw', height: '100vh', background: '#050510' }}>
-            <Canvas shadows dpr={[1, 2]}>
-                <Suspense fallback={null}>
-                    <Scene />
-                </Suspense>
-            </Canvas>
+            <Scene />
 
             {/* UI Overlay */}
             <div
