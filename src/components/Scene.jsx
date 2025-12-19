@@ -7,6 +7,8 @@ import Snow from './Snow'
 import BaseRings from './BaseRings'
 import TopDecoration from './TopDecoration'
 import WishEffect from './WishEffect'
+import Fireworks from './Fireworks'
+import ChiikawaCharacters from './ChiikawaCharacters'
 import { useHandLandmarker } from '../hooks/useHandLandmarker'
 
 // UI Overlay for Wish Input
@@ -180,9 +182,11 @@ export default function Scene() {
                     isHighlighted={treeHighlight}
                 />
                 <BaseRings />
+                <ChiikawaCharacters />
                 <TopDecoration />
                 <Snow />
                 <WishEffect wishes={wishes} onReachTop={handleWishComplete} />
+                <Fireworks />
 
                 {/* Post Processing */}
                 <EffectComposer disableNormalPass>

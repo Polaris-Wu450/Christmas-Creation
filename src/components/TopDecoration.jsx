@@ -17,50 +17,6 @@ export default function TopDecoration() {
         const colorSoft = new THREE.Color('#FF9FB5')
         const colorGold = new THREE.Color('#FBC96B')
 
-        const shape = new THREE.Shape()
-        const x = 0, y = 0
-        shape.moveTo(x + 0.25, y + 0.25)
-        shape.bezierCurveTo(x + 0.25, y + 0.25, x + 0.2, y, x, y)
-        shape.bezierCurveTo(x - 0.3, y, x - 0.3, y + 0.35, x - 0.3, y + 0.35)
-        shape.bezierCurveTo(x - 0.3, y + 0.55, x - 0.1, y + 0.77, x + 0.25, y + 0.95)
-        shape.bezierCurveTo(x + 0.6, y + 0.77, x + 0.8, y + 0.55, x + 0.8, y + 0.35)
-        shape.bezierCurveTo(x + 0.8, y + 0.35, x + 0.8, y, x + 0.5, y)
-        shape.bezierCurveTo(x + 0.35, y, x + 0.25, y + 0.25, x + 0.25, y + 0.25)
-
-        // Sample points inside the shape
-        const geometry = new THREE.ShapeGeometry(shape)
-        geometry.scale(0.8, 0.8, 0.8) // Slightly smaller
-        geometry.center()
-
-        // We need to sample volumetrically somewhat to make it look 3D or just stacked layers
-        // Let's create multiple layers of the shape to give it depth
-
-        let idx = 0
-        const layers = 8
-
-        for (let l = 0; l < layers; l++) {
-            const z = (l / layers - 0.5) * 0.3 // Thickness
-            // Randomly sample points
-            for (let k = 0; k < count / layers; k++) {
-                // Rejection sampling for 2D shape is complex without triangulation, 
-                // but we can just use the geometry vertices + random faces?
-                // Simpler: Just random points in bounding box and check isInside?
-                // Actually, simplest is just to use geometry.attributes.position if we had many segments,
-                // but ShapeGeometry is minimal.
-
-                // Alternative: Parametric heart equation for 3D volume?
-                // (x^2+9/4y^2+z^2-1)^3 - x^2z^3-9/80y^2z^3 = 0
-                // Let's stick to the shape extrusion idea but filled with particles.
-
-                // For now, let's just make a cloud around the parametric heart curve
-                // x = 16sin^3(t)
-                // y = 13cos(t)-5cos(2t)-2cos(3t)-cos(4t)
-                // z = varies
-
-                // Actually let's just use the shape geometry we created and emit points on it
-            }
-        }
-
         // Fallback to parametric heart for better particle volume
         for (let i = 0; i < count; i++) {
             // Random t
@@ -162,6 +118,12 @@ function generateHaloTexture() {
     const canvas = document.createElement('canvas');
     canvas.width = 128;
     canvas.height = 128;
-    // simple glow
-    return canvas
+    const ctx = canvas.getContext('2d');
+    const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    g.addColorStop(0, 'rgba(255, 105, 180, 0.5)'); // Pink center
+    g.addColorStop(0.5, 'rgba(255, 105, 180, 0.1)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 128, 128);
+    return canvas;
 }
